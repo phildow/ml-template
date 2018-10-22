@@ -1,0 +1,42 @@
+
+# Create TF Records
+
+# Train a model
+
+mkdir tmp/training
+
+# View results of training in tensorboard
+
+tensorboard --logdir tmp/training
+
+# Predict with an estimator that's been saved to some directory
+
+python predict.py \
+  --predict-tfrecords tfrecords/test.tfrecords \
+  --batch 32 \
+  --model-dir tmp/training
+
+# Export the model
+
+mkdir tmp/export
+
+python export.py \
+  --model-dir tmp/training \
+  --output-dir tmp/export
+
+# Freeze the graph
+
+freeze_graph \
+  --input_saved_model_dir tmp/export/[xxx] \
+  --output_graph tmp/frozen_graph.pb \
+  --output_node_names softmax_tensor
+
+# Convert the graph to tensorflow lite
+
+toco \
+  --graph_def_file tmp/frozen_graph.pb \
+  --output_file tmp/model.tflite \
+  --inference_type FLOAT \
+  --input_arrays image \
+  --input_shapes 1,28,28,1 \
+  --output_arrays softmax_tensor
